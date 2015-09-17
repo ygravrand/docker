@@ -76,29 +76,33 @@ func (p *v2Puller) pullV2Repository(tag string, dryRun bool) (err error) {
 	broadcaster.Add(p.config.OutStream)
 	if found {
 		// Another pull of the same repository is already taking place; just wait for it to finish
+		if dryRun {
+			fmt.Printf("Another pull of the same image is already running, dry-run is not possible unless you restart the Docker daemon.\n")
+		}
 		return broadcaster.Wait()
 	}
 
 	// This must use a closure so it captures the value of err when the
 	// function returns, not when the 'defer' is evaluated.
-	defer func() {
-		p.poolRemoveWithError("pull", taggedName, err)
-	}()
+		defer func() {
+			p.poolRemoveWithError("pull", taggedName, err)
+		}()
 
-	var layersDownloaded bool
-	for _, tag := range tags {
-		// pulledNew is true if either new layers were downloaded OR if existing images were newly tagged
-		// TODO(tiborvass): should we change the name of `layersDownload`? What about message in WriteStatus?
-		pulledNew, err := p.pullV2Tag(broadcaster, tag, taggedName, dryRun)
-		if err != nil {
-			return err
+		var layersDownloaded bool
+		for _, tag := range tags {
+			// pulledNew is true if either new layers were downloaded OR if existing images were newly tagged
+			// TODO(tiborvass): should we change the name of `layersDownload`? What about message in WriteStatus?
+			pulledNew, err := p.pullV2Tag(broadcaster, tag, taggedName, dryRun)
+
+			if err != nil {
+				return err
+			}
+			layersDownloaded = layersDownloaded || pulledNew
 		}
-		layersDownloaded = layersDownloaded || pulledNew
-	}
 
-	writeStatus(taggedName, broadcaster, p.sf, layersDownloaded)
+		writeStatus(taggedName, broadcaster, p.sf, layersDownloaded)
 
-	return nil
+		return nil
 }
 
 // downloadInfo is used to pass information from download to extractor
