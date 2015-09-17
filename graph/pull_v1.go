@@ -28,7 +28,7 @@ type v1Puller struct {
 	session  *registry.Session
 }
 
-func (p *v1Puller) Pull(tag string) (fallback bool, err error) {
+func (p *v1Puller) Pull(tag string, dryRun bool) (fallback bool, err error) {
 	if utils.DigestReference(tag) {
 		// Allowing fallback, because HTTPS v1 is before HTTP v2
 		return true, registry.ErrNoSupport{errors.New("Cannot pull by digest with v1 registry")}
