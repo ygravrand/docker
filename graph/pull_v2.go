@@ -77,7 +77,7 @@ func (p *v2Puller) pullV2Repository(tag string, dryRun bool) (err error) {
 	if found {
 		// Another pull of the same repository is already taking place; just wait for it to finish
 		if dryRun {
-			fmt.Printf("Another pull of the same image is already running, dry-run is not possible unless you restart the Docker daemon.\n")
+			fmt.Printf("!!! Another pull of the same image is already running, dry-run is not possible unless you restart the Docker daemon !!!\n")
 		}
 		return broadcaster.Wait()
 	}
@@ -231,6 +231,16 @@ func (p *v2Puller) pullV2Tag(out io.Writer, tag, taggedName string, dryRun bool)
 			return false, err
 		}
 
+		p.graph.Retain(p.sessionID, img.ID)
+		layerIDs = append(layerIDs, img.ID)
+
+		// Check if exists
+		if p.graph.Exists(img.ID) {
+			logrus.Debugf("Image already exists: %s", img.ID)
+			out.Write(p.sf.FormatProgress(stringid.TruncateID(img.ID), "Already exists", nil))
+			continue
+		}
+
 		/* TODO YGD: See if we could do this a lighter way */
 		digest := manifest.FSLayers[i].BlobSum
 		blobs := p.repo.Blobs(context.Background())
@@ -243,16 +253,6 @@ func (p *v2Puller) pullV2Tag(out io.Writer, tag, taggedName string, dryRun bool)
 		nbLayers += 1
 		if dryRun {
 			logrus.Debugf("%v layer size is %v bytes", stringid.TruncateID(img.ID), desc.Size)
-			continue
-		}
-
-		p.graph.Retain(p.sessionID, img.ID)
-		layerIDs = append(layerIDs, img.ID)
-
-		// Check if exists
-		if p.graph.Exists(img.ID) {
-			logrus.Debugf("Image already exists: %s", img.ID)
-			out.Write(p.sf.FormatProgress(stringid.TruncateID(img.ID), "Already exists", nil))
 			continue
 		}
 
