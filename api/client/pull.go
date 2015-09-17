@@ -50,7 +50,6 @@ func (cli *DockerCli) CmdPull(args ...string) error {
 	v.Set("fromImage", ref.ImageName(taglessRemote))
 
 	if *dryRun {
-		fmt.Fprintf(cli.out, "**** Dry Run - nothing will be downloaded ****\n")
 		v.Set("dryRun","true")
 	}
 

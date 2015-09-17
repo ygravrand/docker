@@ -100,7 +100,7 @@ func (p *v2Puller) pullV2Repository(tag string, dryRun bool) (err error) {
 			layersDownloaded = layersDownloaded || pulledNew
 		}
 
-		writeStatus(taggedName, broadcaster, p.sf, layersDownloaded)
+		writeStatus(taggedName, broadcaster, p.sf, layersDownloaded, dryRun)
 
 		return nil
 }
@@ -218,6 +218,10 @@ func (p *v2Puller) pullV2Tag(out io.Writer, tag, taggedName string, dryRun bool)
 	var totalSize int64
 	totalSize = 0
 	nbLayers := 0
+
+	if dryRun {
+		fmt.Printf("**** Dry Run - nothing will be downloaded ****\n")
+	}
 
 	for i := len(manifest.FSLayers) - 1; i >= 0; i-- {
 
