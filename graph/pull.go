@@ -146,9 +146,9 @@ func (s *TagStore) Pull(image string, tag string, imagePullConfig *ImagePullConf
 // indicates that the image is up to date. requestedTag is the tag the message
 // will refer to.
 func writeStatus(requestedTag string, out io.Writer, sf *streamformatter.StreamFormatter, layersDownloaded bool, dryRun bool) {
-  if dryRun {
+	if dryRun {
 		out.Write(sf.FormatStatus("", "Status: Dry Run completed for %s", requestedTag))
-	}	else if layersDownloaded {
+	} else if layersDownloaded {
 		out.Write(sf.FormatStatus("", "Status: Downloaded newer image for %s", requestedTag))
 	} else {
 		out.Write(sf.FormatStatus("", "Status: Image is up to date for %s", requestedTag))

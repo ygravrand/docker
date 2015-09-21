@@ -50,7 +50,7 @@ func (cli *DockerCli) CmdPull(args ...string) error {
 	v.Set("fromImage", ref.ImageName(taglessRemote))
 
 	if *dryRun {
-		v.Set("dryRun","true")
+		v.Set("dryRun", "true")
 	}
 
 	_, _, err = cli.clientRequestAttemptLogin("POST", "/images/create?"+v.Encode(), nil, cli.out, repoInfo.Index, "pull")

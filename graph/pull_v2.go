@@ -84,25 +84,25 @@ func (p *v2Puller) pullV2Repository(tag string, dryRun bool) (err error) {
 
 	// This must use a closure so it captures the value of err when the
 	// function returns, not when the 'defer' is evaluated.
-		defer func() {
-			p.poolRemoveWithError("pull", taggedName, err)
-		}()
+	defer func() {
+		p.poolRemoveWithError("pull", taggedName, err)
+	}()
 
-		var layersDownloaded bool
-		for _, tag := range tags {
-			// pulledNew is true if either new layers were downloaded OR if existing images were newly tagged
-			// TODO(tiborvass): should we change the name of `layersDownload`? What about message in WriteStatus?
-			pulledNew, err := p.pullV2Tag(broadcaster, tag, taggedName, dryRun)
+	var layersDownloaded bool
+	for _, tag := range tags {
+		// pulledNew is true if either new layers were downloaded OR if existing images were newly tagged
+		// TODO(tiborvass): should we change the name of `layersDownload`? What about message in WriteStatus?
+		pulledNew, err := p.pullV2Tag(broadcaster, tag, taggedName, dryRun)
 
-			if err != nil {
-				return err
-			}
-			layersDownloaded = layersDownloaded || pulledNew
+		if err != nil {
+			return err
 		}
+		layersDownloaded = layersDownloaded || pulledNew
+	}
 
-		writeStatus(taggedName, broadcaster, p.sf, layersDownloaded, dryRun)
+	writeStatus(taggedName, broadcaster, p.sf, layersDownloaded, dryRun)
 
-		return nil
+	return nil
 }
 
 // downloadInfo is used to pass information from download to extractor
@@ -241,12 +241,12 @@ func (p *v2Puller) pullV2Tag(out io.Writer, tag, taggedName string, dryRun bool)
 			continue
 		}
 
-		/* TODO YGD: See if we could do this a lighter way */
 		digest := manifest.FSLayers[i].BlobSum
 		blobs := p.repo.Blobs(context.Background())
 		desc, err := blobs.Stat(context.Background(), digest)
 		if err != nil {
 			logrus.Debugf("Error statting layer: %v", err)
+			return false, err
 		}
 
 		totalSize += desc.Size
@@ -286,7 +286,7 @@ func (p *v2Puller) pullV2Tag(out io.Writer, tag, taggedName string, dryRun bool)
 		}
 	}
 	if dryRun {
-		out.Write(p.sf.FormatStatus(tag, "Dry Run: %v bytes would be downloaded, in %v layers", totalSize, nbLayers))
+		out.Write(p.sf.FormatStatus(tag, "Dry Run: %v bytes to be downloaded, in %v layers", totalSize, nbLayers))
 		return true, nil
 	}
 
